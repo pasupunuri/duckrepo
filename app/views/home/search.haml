@@ -1,11 +1,15 @@
 %br
 .row
   .col-md-3.col-md-offset-4
-    %form{action: '/', method: 'get'}
+    %form{action: root_path, method: 'get'}
       .input-group
         %input.form-control{name: "query", placeholder: "Search for...", type: "text", value: params[:query]}
           %span.input-group-btn
             %input.btn.btn-default{type: "submit", value: 'Search'}
+      %label.radio-inline
+        %input{type: "radio", value: 'web', name: 'type', checked: (current_type == 'web')} Web
+      %label.radio-inline
+        %input{type: "radio", value: 'topic', name: 'type', checked: (current_type == 'topic')} Topics
 
 %br
 - @result.each do |res|
@@ -19,11 +23,12 @@
 %br        
 .row
   .col-md-5.col-md-offset-3
-    - if params[:page].to_i > 0
-      %a{href: root_path(query: params[:query], page: params[:page].to_i - 1)} Previous
-      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-    - if @result.present?
-      %a{href: root_path(query: params[:query], page: params[:page].to_i + 1)} Next
+    - if current_type == 'web'
+      - if previous_page >= 0
+        %a{href: root_path(query: params[:query], page: previous_page, type: current_type)} Previous
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+      - if @result.present?
+        %a{href: root_path(query: params[:query], page: next_page, type: current_type)} Next
     
 %br
 %br

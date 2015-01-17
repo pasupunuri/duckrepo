@@ -8,8 +8,16 @@ class DuckDuck
     cxt[:arr]
   end
   
-  def self.get(options={})
+  def self.search(options={})
     raise ArgumentError.new('Need search term - query') unless options[:query]
+    if options[:type] == 'web' || options[:type].blank?
+      web(options)
+    elsif options[:type] == 'topic'
+      topics(options)
+    end
+  end
+  
+  def self.web(options)
     page = options[:page].to_i
     limit = (page * 50) - 20
     limit = 0 if limit < 0
@@ -22,6 +30,29 @@ class DuckDuck
       results.collect do |result|
         {url: result.u, title: result.t, snippet: result.a} unless result.respond_to?(:n)
       end.compact
+    else
+      []
+    end
+  end
+  
+  def self.topics(options)
+    resp = HTTParty.get("http://api.duckduckgo.com/?q=#{options[:query]}&format=json")
+    if resp.ok?
+      data = JSON.parse(resp.body)
+      data['RelatedTopics'].collect{|hash| topic_data_from_result(hash)}.flatten.compact
+    else
+      []
+    end
+  end
+  
+  
+  def self.topic_data_from_result(hash)
+    if hash['Topics'].present?
+      hash['Topics'].collect{|hash| topic_data_from_result(hash)}
+    elsif hash['Result']
+      {url: hash['FirstURL'], title: hash['FirstURL'], snippet: hash['Text']}
+    else
+      nil
     end
   end
 end
